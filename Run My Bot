@@ -1,0 +1,37 @@
+name: Run My Bot
+
+on:
+  # 触发方式 1：定时触发（例如每小时运行一次）
+  schedule:
+    - cron: '0 * * * *'
+  # 触发方式 2：手动触发
+  workflow_dispatch:
+  # 触发方式 3：当代码推送到 main 分支时
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install litellm  # 或者使用 pip install -r requirements.txt
+
+      - name: Run Bot
+        env:
+          # 将 GitHub Secrets 映射为环境变量
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          FEISHU_APP_SECRET: ${{ secrets.FEISHU_APP_SECRET }}
+        run: |
+          # 假设你的入口程序是 main.py
+          python main.py
