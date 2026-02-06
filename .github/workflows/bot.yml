@@ -1,0 +1,46 @@
+name: Run Nanobot
+
+on:
+  push:
+    branches: [ main ]  # 推送代码时运行
+  schedule:
+    - cron: '*/30 * * * *' # 每 30 分钟自动运行一次（可选）
+  workflow_dispatch:      # 允许你在 GitHub 页面手动点击运行
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 拉取你的代码
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. 设置 Python 环境
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # 3. 安装机器人所需的依赖（根据你的项目调整）
+      - name: Install Dependencies
+        run: |
+          pip install litellm requests
+          # 如果有 requirements.txt 则：pip install -r requirements.txt
+
+      # 4. 关键步骤：用 Secrets 替换模板中的占位符，生成真实的 config.json
+      - name: Generate Config File
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          FEISHU_APP_ID: ${{ secrets.FEISHU_APP_ID }}
+          FEISHU_APP_SECRET: ${{ secrets.FEISHU_APP_SECRET }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+        run: |
+          envsubst < config.template.json > config.json
+          # 这行命令会将模板里的 $变量 替换为上面 env 里定义的真实 Key
+
+      # 5. 运行机器人
+      - name: Start Bot
+        run: |
+          # 假设你的机器人启动命令是 python main.py
+          python main.py --config config.json
